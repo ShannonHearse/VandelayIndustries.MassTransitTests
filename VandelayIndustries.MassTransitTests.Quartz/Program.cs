@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Specialized;
-using System.Threading.Tasks;
 using MassTransit;
-using MassTransit.QuartzIntegration;
-
-// using Quartz;
-// using Quartz.Impl;
 
 namespace VandelayIndustries.MassTransitTests.Quartz
 {
@@ -32,38 +26,5 @@ namespace VandelayIndustries.MassTransitTests.Quartz
 
             busControl.Stop();
         }
-        /*
-        static void Main(string[] args)
-        {
-            RunProgram().GetAwaiter().GetResult();
-        }
-
-        private static async Task RunProgram()
-        {
-            try
-            {
-                await Console.Out.WriteLineAsync("Starting Quartz Scheduler");
-                NameValueCollection props = new NameValueCollection
-                {
-                    {"quartz.serializer.type", "binary" },
-                    {"quartz.scheduler.instanceName", "MyScheduler" },
-                    {"quartz.jobStore.type", "Quartz.Simpl.RAMJobStore, Quartz" },
-                    {"quartz.threadPool.threadCount", "1" },
-                };
-                StdSchedulerFactory factory = new StdSchedulerFactory(props);
-                IScheduler scheduler = await factory.GetScheduler();
-
-                await scheduler.Start();
-                await Console.Out.WriteLineAsync("Scheduler Running.  Press any key to terminate");
-                Console.Read();
-                await scheduler.Shutdown();
-
-            }
-            catch (Exception e)
-            {
-                await Console.Error.WriteLineAsync(e.ToString());
-            }
-        }
-        */
     }
 }

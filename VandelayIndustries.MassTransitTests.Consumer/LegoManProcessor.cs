@@ -35,7 +35,8 @@ namespace VandelayIndustries.MassTransitTests.Consumer
                     await Console.Out.WriteLineAsync("Redelivering");
                     if (redeliveryCount > 5)
                     {
-                        // TODO - we probably want to throw an specific exception here.
+                        // We throw this exception, On ConsumerConfiguration, we have said to ignore this exception, therefor it goes straight to the relevant error queue.
+                        // Is there a better way to to this?  Can we go context.DeliverToErrorQueue() or similar?
                         throw new WeAreDoneException("We are done peoples");
                     }
                     await context.Redeliver(TimeSpan.FromSeconds(5));

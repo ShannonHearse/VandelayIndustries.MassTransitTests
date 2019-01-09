@@ -24,9 +24,6 @@ namespace VandelayIndustries.MassTransitTests.Consumer
 
                 cfg.ReceiveEndpoint(host, "lego_man_queue", endpointConfigurator =>
                 {
-                    // The 'UseScheduledRedelivery seems to override this.  Also, seems to duplicate when you call 'Schedule redelivery'.
-                    
-                    
                     endpointConfigurator.Consumer<LegoManProcessor>(consumerConfigurator =>
                     {
                         consumerConfigurator.Message<LegoManCreated>(consumerConfig =>
@@ -41,10 +38,9 @@ namespace VandelayIndustries.MassTransitTests.Consumer
                         });
                     });
                     
-                    // e.Consumer<LegoManProcessor>();
                     endpointConfigurator.Consumer<LegoManProcessorFaultConsumer>();
                 });
-                // The below is for context.Defer, which also needs a specific plugin.
+                // The below is for context.Defer, which also needs the rabbitMq server to have the rabbitmq_delayed_message_exchange plugin installed.
                 // cfg.UseDelayedExchangeMessageScheduler();
             });
 
