@@ -28,20 +28,28 @@ namespace VandelayIndustries.MassTransitTests.Consumer
                     {
                         consumerConfigurator.Message<LegoManCreated>(consumerConfig =>
                         {
-                            // Note: Order of config seems to be important, move the useRetry to above UseScheduledDelivery, and the immediate retries seems to disappear.
-                            consumerConfig.UseScheduledRedelivery(Retry.Incremental(5, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3)));
+                            // For the below config, we want:
+                            //    InvalidInputException to go straight to error queue
+                            //    PrerequisiteNotYetCreatedException to go straight to Scheduled Redelivery (Second Level Retries)
+                            //    All other exceptions (should be mainly Transient) to go through Retries and Scheduled Redelivery.
+
+                            consumerConfig.UseScheduledRedelivery(scheduledRedeliveryConfiguration =>
+                            {
+                                scheduledRedeliveryConfiguration.Incremental(5, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3));
+                                scheduledRedeliveryConfiguration.Ignore<InvalidInputException>();
+                            });
+
                             consumerConfig.UseRetry(retryConfig =>
                             {
+                                // Immediate Retries of 5 left in, as we want this to work for exceptions that re not 'WeAreDoneException'
                                 retryConfig.Immediate(5);
-                                retryConfig.Ignore<WeAreDoneException>();
+                                // This is to ensure if the LegoManCreated Consumer throws a 'WeAreDone' exception, then it goes straight to the Error Queue.
+                                retryConfig.Ignore<PrerequisiteNotYetCreatedException>();
+                                retryConfig.Ignore<InvalidInputException>();
                             });
                         });
                     });
-                    
-                    endpointConfigurator.Consumer<LegoManProcessorFaultConsumer>();
                 });
-                // The below is for context.Defer, which also needs the rabbitMq server to have the rabbitmq_delayed_message_exchange plugin installed.
-                // cfg.UseDelayedExchangeMessageScheduler();
             });
 
             busControl.Start();

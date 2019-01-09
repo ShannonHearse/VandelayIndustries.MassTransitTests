@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using VandelayIndustries.MassTransitTests.Contracts.Events;
 using MassTransit;
+using MassTransit.RabbitMqTransport;
 
 namespace VandelayIndustries.MassTransitTests.Consumer
 {
@@ -13,39 +14,14 @@ namespace VandelayIndustries.MassTransitTests.Consumer
             var redeliveryCount = int.Parse(context.Headers.Get("MT-Redelivery-Count", "0"));
             await Console.Out.WriteLineAsync($"Redelivery Count = {redeliveryCount}");
 
-            if (context.Message.Action != null)
-            {
-                if (context.Message.Action.ToLower().Contains("exception"))
-                {
-                    await Console.Out.WriteLineAsync("Throwing Exception");
-                    throw new DeliberateException("Lego Man is an exception");
-                }
+            if (context.Message.Action.ToLower().Contains("InvalidInput".ToLower()))
+                throw new InvalidInputException("Input was Invalid.  Straight to error queue with you.");
+            if (context.Message.Action.ToLower().Contains("PrerequisiteNotYetCreated".ToLower()))
+                throw new PrerequisiteNotYetCreatedException("Relevant Prerequisite Not Yet Created. Redeliver later.  Give the Prereq a chance to happen.  Eventually get to the error queue.");
+            if (context.Message.Action.ToLower().Contains("TransientException".ToLower()))
+                throw new TransientException("Transient Error.  Immediate retries for you.  If they don't work, Redeliver and Immediate retries.  Eventually get to the error queue.");
 
-                if (context.Message.Action.ToLower().Contains("defer"))
-                {
-                    await Console.Out.WriteLineAsync("Deferring");
-                    // Note: Defer does work unless you have the rabbitmq_delayed_message_exchange on the relevant rabbit mq server.
-                    await context.Defer(TimeSpan.FromSeconds(10));
-                    await Console.Out.WriteLineAsync("Deferred");
-                    return;
-                }
-
-                if (context.Message.Action.ToLower().Contains("redeliver"))
-                {
-                    await Console.Out.WriteLineAsync("Redelivering");
-                    if (redeliveryCount > 5)
-                    {
-                        // We throw this exception, On ConsumerConfiguration, we have said to ignore this exception, therefor it goes straight to the relevant error queue.
-                        // Is there a better way to to this?  Can we go context.DeliverToErrorQueue() or similar?
-                        throw new WeAreDoneException("We are done peoples");
-                    }
-                    await context.Redeliver(TimeSpan.FromSeconds(5));
-                    await Console.Out.WriteLineAsync("Redelivered!");
-                    return;
-                }
-            }
-
-            await Console.Out.WriteLineAsync($"Post Creation Process for Lego man with name of {context.Message.Name} was executed.");
+            await Console.Out.WriteLineAsync("Message successfully processed");
         }
     }
 }
