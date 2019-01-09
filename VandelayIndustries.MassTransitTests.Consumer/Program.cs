@@ -41,9 +41,7 @@ namespace VandelayIndustries.MassTransitTests.Consumer
 
                             consumerConfig.UseRetry(retryConfig =>
                             {
-                                // Immediate Retries of 5 left in, as we want this to work for exceptions that re not 'WeAreDoneException'
                                 retryConfig.Immediate(5);
-                                // This is to ensure if the LegoManCreated Consumer throws a 'WeAreDone' exception, then it goes straight to the Error Queue.
                                 retryConfig.Ignore<PrerequisiteNotYetCreatedException>();
                                 retryConfig.Ignore<InvalidInputException>();
                             });
